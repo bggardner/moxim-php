@@ -1,0 +1,7 @@
+The Modular eXtensible Information Modeler (MoXIM) is a database
+framework drawing from the eXtensible Information Modeler (XIM).
+
+moxim-php provides PHP classes and an interface to a MoXIM-ized database.
+
+For more information about the orignal XIM:
+http://www.nasa.gov/centers/johnson/techtransfer/technology/MSC-24575-1-xim.html
