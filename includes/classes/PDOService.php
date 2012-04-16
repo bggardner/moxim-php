@@ -17,5 +17,7 @@
     abstract protected function addRelation($name, $domain, $range);
     abstract private function _connect($dbname);
     abstract protected function deleteModule($id);
+    abstract protected function deleteRelation($id);
+    abstract protected function idExists($table, $id);
   }
 ?>
