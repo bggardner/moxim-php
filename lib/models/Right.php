@@ -1,5 +1,5 @@
 <?php
-  namespace MoXIM;
+  namespace MoXIM\models;
   
   class Right extends Node
   {

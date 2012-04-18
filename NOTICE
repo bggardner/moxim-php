@@ -1,0 +1,12 @@
+=========================================================================
+NOTICE file for use with, and corresponding to Section 4 of,            
+the Apache License, Version 2.0,                                  
+in this case for the moxim-php project.                     
+=========================================================================
+
+MoXIM and moxim-php were developed by Brent G. Gardner of the
+NASA John H. Glenn Research Center in Cleveland, OH.
+
+Elements of this project were derived from the SQL/ColdFusion/Adobe Flex
+-based eXtensible Information Modeler (XIM) project:
+http://www.nasa.gov/centers/johnson/techtransfer/technology/MSC-24575-1-xim.html

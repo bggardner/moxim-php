@@ -1,5 +1,5 @@
 <?php
-  namespace MoXIM;
+  namespace MoXIM\models;
   
   class Role extends Node
   {
