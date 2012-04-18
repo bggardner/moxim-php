@@ -1,10 +1,22 @@
 The Modular eXtensible Information Modeler (MoXIM) is a database
-and web application framework that creates a balance between
-performance and flexibility.
+structure and servicing layer that creates a balance between
+performance and flexibility.  It can be implemented as a wrapper
+around an existing database to create dynamic relationships.
+
+The original XIM (see link below) was a purely relational database
+that essentially had no predefined structure.  All "nodes" and the
+relationships between them were stored in very large tables.  Node
+types and relationships types were dynamically generated, making
+it extremely flexible.
+
+MoXIM has the same flexibility of XIM, but allows for predefined
+tables, or "modules".  Predefined primary/foreign key relationships
+can be utilized between modules to improve clarity and performance,
+while dynamic relationships are provided by the MoXIM service layer.
 
 See MoXIM_Database_Layout.pdf for an example MoXIM database layout.
 
-moxim-php provides PHP classes and an interface to a MoXIM-ized database.
+moxim-php provides a PHP service layer for a MoXIM-ized database.
 
 For more information about the original XIM:
 http://www.nasa.gov/centers/johnson/techtransfer/technology/MSC-24575-1-xim.html
