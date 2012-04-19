@@ -3,6 +3,7 @@
 
   function __autoload($class)
   {
+echo $class . '<br/>';
     if (substr($class,0,5) == 'MoXIM')
     {
       $moxim_class = str_replace('\\', '/', substr($class, 6));
