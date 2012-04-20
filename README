@@ -1,3 +1,4 @@
+ABOUT
 The Modular eXtensible Information Modeler (MoXIM) is a database
 structure and servicing layer that creates a balance between
 performance and flexibility.  It can be implemented as a wrapper
@@ -18,37 +19,37 @@ without altering the schema of the existing tables.
 
 See MoXIM_Database_Layout.pdf for an example MoXIM database layout.
 
-moxim-php provides a PHP service layer for a MoXIM-ized database.
+moxim-php provides a PHP service layer for a MoXIM-ized database:
+http://www.github.com/bggardner/moxim-php
 
 For more information about the original XIM:
 http://www.nasa.gov/centers/johnson/techtransfer/technology/MSC-24575-1-xim.html
 
-INSTALLATION:
-1. Copy the 'lib' directory to your webserver. You may rename this
+INSTALLATION
+   1. Copy the 'lib' directory to your webserver. You may rename this
    directory; "moxim" or "moxim-php" is recommended.
 
-2. Edit the 'app/config.php' for your specific application.
-   You may rename and/or move this file.
-
-3. As the above files should only be included, it is recommended
+   2. As the above files should only be included, it is recommended
    you prevent a web client from accessing them by storing them
-   in a private directory or use permissions.
+   in a private directory or set permissions accordingly.
 
-USAGE:
-1. Include the configuration file in every file you need to use MoXIM.
+USAGE
+   1. Include the 'config.php' file in every file you need to use
+   MoXIM.  Alternatively, you may copy its contents into your own
+   include file, as its only purpose is to load MoXIM classes.
 
-2. Instantiate a service by calling <ServiceClass>($o), where $o
+   2. Instantiate a service by calling <ServiceClass>($o), where $o
    is an object that defines the data provider information.
 
-   Example:
+EXAMPLE
+   require_once 'config.php';
+
    $o = new stdClass();
    $o->driver = 'pdo/mysql'; // Name of driver
    $o->dbname = 'moxim'; // Name of MySQL database
    $o->username = 'username'; // Username for MySQL database
    $o->password = 'password'; // Password for MySQL database
 
-   or
-
-   $o = new stdClass(array('driver' => 'pdo/mysql', ...));
-
    $svc = new \MoXIM\services\BaseService($o);
+
+
