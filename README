@@ -4,15 +4,17 @@ performance and flexibility.  It can be implemented as a wrapper
 around an existing database to create dynamic relationships.
 
 The original XIM (see link below) was a purely relational database
-that essentially had no predefined structure.  All "nodes" and the
-relationships between them were stored in very large tables.  Node
-types and relationships types were dynamically generated, making
-it extremely flexible.
+that essentially had no predefined structure, which simulated a
+schema-less database.  All "nodes" and the relationships between
+them were stored in very large tables.  Node types and relationship
+types were dynamically generated, making it extremely flexible.
 
-MoXIM has the same flexibility of XIM, but allows for predefined
-tables, or "modules".  Predefined primary/foreign key relationships
-can be utilized between modules to improve clarity and performance,
-while dynamic relationships are provided by the MoXIM service layer.
+MoXIM uses a hybrid approach, blending the flexibility of a schema
+-less database and the performance of a database with a fully defined
+schema.  MoXIM's "modules" are simply the tables with schemas that
+can have primary/foreign key relationships between them, as "usual".
+MoXIM allows for additional relationships to be created dynamically
+without altering the schema of the existing tables.
 
 See MoXIM_Database_Layout.pdf for an example MoXIM database layout.
 
@@ -20,3 +22,33 @@ moxim-php provides a PHP service layer for a MoXIM-ized database.
 
 For more information about the original XIM:
 http://www.nasa.gov/centers/johnson/techtransfer/technology/MSC-24575-1-xim.html
+
+INSTALLATION:
+1. Copy the 'lib' directory to your webserver. You may rename this
+   directory; "moxim" or "moxim-php" is recommended.
+
+2. Edit the 'app/config.php' for your specific application.
+   You may rename and/or move this file.
+
+3. As the above files should only be included, it is recommended
+   you prevent a web client from accessing them by storing them
+   in a private directory or use permissions.
+
+USAGE:
+1. Include the configuration file in every file you need to use MoXIM.
+
+2. Instantiate a service by calling <ServiceClass>($o), where $o
+   is an object that defines the data provider information.
+
+   Example:
+   $o = new stdClass();
+   $o->driver = 'pdo/mysql'; // Name of driver
+   $o->dbname = 'moxim'; // Name of MySQL database
+   $o->username = 'username'; // Username for MySQL database
+   $o->password = 'password'; // Password for MySQL database
+
+   or
+
+   $o = new stdClass(array('driver' => 'pdo/mysql', ...));
+
+   $svc = new \MoXIM\services\BaseService($o);
