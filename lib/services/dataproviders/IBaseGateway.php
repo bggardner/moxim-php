@@ -23,12 +23,18 @@
 
     function getAssignment($id);
     function getAssignmentId($module, $node, $value);
+    function getAssignments($module, $node, $value, $opts);
     function getModule($id);
     function getModuleId($name);
+    function getModules($opts);
     function getRelation($id);
     function getRelationId($domain, $name, $range);
+    function getRelations($domain, $name, $range, $opts);
     function getRelationship($id);
     function getRelationshipId($domain, $relation, $range);
+    function getRelationships($domain, $relation, $range, $opts);
+
+    function nodeExists($module, $node);
 
     function updateAssignment(Assignment $a);
     function updateModule(Module $m);

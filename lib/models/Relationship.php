@@ -10,9 +10,9 @@
     public function validate($flags = 0)
     {
       parent::validate();
-      $this->domain = Node::validateId($this->domain);
+      //$this->domain = Node::validateId($this->domain);
       $this->relation = Relation::validateId($this->relation);
-      $this->range = Node::validateId($this->relation);
+      //$this->range = Node::validateId($this->range);
     }
 
   }

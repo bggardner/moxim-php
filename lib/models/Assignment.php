@@ -11,7 +11,7 @@
     {
       parent::validate();
       $this->module = Module::validateId($this->module);
-      $this->node = Node::validateId($this->node);
+      //$this->node = Node::validateId($this->node);
       $this->value = self::validateValue($this->value, FALSE);
     }
 

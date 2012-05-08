@@ -37,6 +37,10 @@
         $classPath = __DIR__ . '/';
     }
     $classPath .= str_replace('\\', '/', $class) . '.php';
-    require_once realpath($classPath);
+    if (($realClassPath = realpath($classPath)) === FALSE)
+    {
+      throw new RuntimeException('Invalid class path "'.htmlspecialchars($classPath).'".');
+    }
+    require_once $realClassPath;
   }
 ?>

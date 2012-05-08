@@ -7,7 +7,7 @@
   
     public $id;
   
-    protected function validate($flags)
+    protected function validate($flags = 0)
     {
       if ($flags & self::UPDATE)
       {
@@ -21,7 +21,7 @@
       {
         throw RuntimeException(get_called_class().' id is required.');
       }
-      if ($id = filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1))) === FALSE)
+      if (($id = filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)))) === FALSE)
       {
         throw RuntimeException(get_called_class().' id must be a positive integer, '.gettype($id).'('.htmlspecialchars($id).') given.');
       }

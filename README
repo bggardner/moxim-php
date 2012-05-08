@@ -27,7 +27,7 @@ http://www.nasa.gov/centers/johnson/techtransfer/technology/MSC-24575-1-xim.html
 
 INSTALLATION
    1. Copy the 'lib' directory to your webserver. You may rename this
-   directory; "moxim" or "moxim-php" is recommended.
+   directory: "moxim" or "moxim-php" is recommended.
 
    2. As the above files should only be included, it is recommended
    you prevent a web client from accessing them by storing them
@@ -36,12 +36,13 @@ INSTALLATION
 USAGE
    1. Include the 'config.php' file in every file you need to use
    MoXIM.  Alternatively, you may copy its contents into your own
-   include file, as its only purpose is to load MoXIM classes.
+   include file, as its only purpose is to load moxim-php classes.
 
    2. Instantiate a service by calling <ServiceClass>($o), where $o
    is an object that defines the data provider information.
 
 EXAMPLE
+   <?php
    require_once 'config.php';
 
    $o = new stdClass();
@@ -50,6 +51,10 @@ EXAMPLE
    $o->username = 'username'; // Username for MySQL database
    $o->password = 'password'; // Password for MySQL database
 
-   $svc = new \MoXIM\services\BaseService($o);
+   $svc = new MoXIM\services\BaseService($o);
+   
+   $m = new MoXIM\models\Module();
+   $m->name = 'myTable';
 
-
+   $svc->addModule($m);
+   ?>
