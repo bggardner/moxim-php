@@ -141,6 +141,13 @@
       return $stmt->fetchAll(PDO::FETCH_CLASS, 'MoXIM\models\Module');
     }
 
+    public function getNodes($module, $opts)
+    {
+      $module = $this->dp->quote($module);
+      $stmt = $this->dp->query(static::_getNodes($module, $opts));
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getRelation($id)
     {
       $stmt = $this->dp->query(static::_getRelation($this->dp->quote($id, PDO::PARAM_INT)));

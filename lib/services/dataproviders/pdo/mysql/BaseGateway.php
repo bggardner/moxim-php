@@ -100,6 +100,17 @@
       return 'SELECT * FROM `'.self::MODULES.'`'.self::_options($opts);
     }
 
+    public function getNodes($module, $opts)
+    {
+      self::$_module = $this->getModule($module)->name;
+      return parent::getNodes($module, $opts);
+    } 
+
+    static public function _getNodes($module, $opts)
+    {
+      return 'SELECT * FROM `'.self::$_module.'`'.self::_options($opts);
+    }
+
     static public function _getRelation($id)
     {
       return 'SELECT * FROM `'.self::RELATIONS.'` WHERE `id` = '.$id;

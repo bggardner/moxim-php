@@ -164,7 +164,7 @@
     {
       if (!is_null($module))
       {
-        $id = Module::validateId($id);
+        $module = Module::validateId($module);
       }
       $opts = $this->_checkOptions($opts);
       return $this->gateway->getAssignments($module, $node, $value, $opts);
@@ -184,6 +184,12 @@
     {
       $opts = $this->_checkOptions($opts);
       return $this->gateway->getModules($opts);
+    }
+
+    public function getNodes($module, $opts = NULL)
+    {
+      $opts = $this->_checkOptions($opts);
+      return $this->gateway->getNodes($this->getModule($module)->id, $opts);
     }
 
     public function getRelation($id)

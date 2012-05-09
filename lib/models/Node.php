@@ -1,6 +1,7 @@
 <?php
   namespace MoXIM\models;
-  
+  use RuntimeException;
+
   abstract class Node
   {
     const UPDATE = 1;
@@ -19,11 +20,11 @@
     {
       if (is_null($id))
       {
-        throw RuntimeException(get_called_class().' id is required.');
+        throw new RuntimeException(get_called_class().' id is required.');
       }
       if (($id = filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)))) === FALSE)
       {
-        throw RuntimeException(get_called_class().' id must be a positive integer, '.gettype($id).'('.htmlspecialchars($id).') given.');
+        throw new RuntimeException(get_called_class().' id must be a positive integer, '.gettype($id).'('.htmlspecialchars($id).') given.');
       }
       return $id;
     }
