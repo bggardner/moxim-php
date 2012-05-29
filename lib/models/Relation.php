@@ -5,16 +5,16 @@
   {
     const NAME_LENGTH = 32;
     
-    public $domain;
+    public $source;
     public $name;
-    public $range;
+    public $target;
     
     public function validate($flags = 0)
     {
       parent::validate($flags);
-      $this->domain = Module::validateId($this->domain);
+      $this->source = Module::validateId($this->source);
       $this->name = self::validateName($this->name);
-      $this->range = Module::validateId($this->range);
+      $this->target = Module::validateId($this->target);
     }
     
     static protected function validateName($name)

@@ -3,16 +3,16 @@
 
   class Relationship extends Node
   {
-    public $domain;
+    public $source;
     public $relation;
-    public $range;
+    public $target;
 
     public function validate($flags = 0)
     {
       parent::validate();
-      //$this->domain = Node::validateId($this->domain);
+      //$this->source = Node::validateId($this->source);
       $this->relation = Relation::validateId($this->relation);
-      //$this->range = Node::validateId($this->range);
+      //$this->target = Node::validateId($this->target);
     }
 
   }

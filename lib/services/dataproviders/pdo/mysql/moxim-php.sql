@@ -7,18 +7,18 @@ CREATE TABLE IF NOT EXISTS `moxim_modules`
 
 CREATE TABLE IF NOT EXISTS `moxim_relations`
 ( `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `domain` INT(10) UNSIGNED NOT NULL,
+  `source` INT(10) UNSIGNED NOT NULL,
   `name` VARCHAR(32) NOT NULL,
-  `range` INT(10) UNSIGNED NOT NULL,
+  `target` INT(10) UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY (`domain`,`name`,`range`),
-  KEY (`domain`),
-  KEY (`range`),
-  FOREIGN KEY (`domain`)
+  UNIQUE KEY (`source`,`name`,`target`),
+  KEY (`source`),
+  KEY (`target`),
+  FOREIGN KEY (`source`)
     REFERENCES `moxim_modules` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  FOREIGN KEY (`range`)
+  FOREIGN KEY (`target`)
     REFERENCES `moxim_modules` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
@@ -26,11 +26,11 @@ CREATE TABLE IF NOT EXISTS `moxim_relations`
 
 CREATE TABLE IF NOT EXISTS `moxim_relationships`
 ( `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `domain` INT(10) UNSIGNED NOT NULL,
+  `source` INT(10) UNSIGNED NOT NULL,
   `relation` INT(10) UNSIGNED NOT NULL,
-  `range` INT(10) UNSIGNED NOT NULL,
+  `target` INT(10) UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY (`domain`,`relation`,`range`),
+  UNIQUE KEY (`source`,`relation`,`target`),
   KEY (`relation`),
   FOREIGN KEY (`relation`)
     REFERENCES `moxim_relations` (`id`)

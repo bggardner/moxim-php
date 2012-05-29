@@ -1,13 +1,16 @@
 <?php
+
   namespace MoXIM\services;
+
   use MoXIM\models\Assignment;
   use MoXIM\models\Module;
+  use MoXIM\models\Node;
   use MoXIM\models\Relation;
   use MoXIM\models\Relationship;
 
   use \RuntimeException;
 
-  /* This class provides error checking to the gateway/dataprovider. */
+  /* This class provides error checking to the dp/dataprovider. */
 
   class BaseService
   {
@@ -18,85 +21,103 @@
     const RELATIONSHIPS = 3;
 
     public $default_options = array('sort' => array('id' => 'ASC'));
-    public $dp;
-    private $gateway;
+    private $dp;
+    public  $ds;
 
     public function __construct($o)
     {
-      if (!(include_once 'dataproviders/' . $o->driver . '/BaseGateway.php'))
+      if ((include_once 'dataproviders/' . $o->driver . '/BaseDataProvider.php') === FALSE)
       {
-        throw new Exception('Driver "'.htmlspecialchars($o->driver).'" does not exist.');
+        throw new RuntimeException('Driver "'.htmlspecialchars($o->driver).'" does not exist.');
       }
-      $driverClass = __NAMESPACE__ . '\\dataproviders\\' . str_replace('/', '\\', $o->driver) . '\\BaseGateway';
-      $this->gateway = new $driverClass($o);
-      if (!($this->gateway instanceof dataproviders\IBaseGateway))
+      $driverClass = __NAMESPACE__ . '\\dataproviders\\' . str_replace('/', '\\', $o->driver) . '\\BaseDataProvider';
+      $this->dp = new $driverClass($o);
+      if (($this->dp instanceof dataproviders\BaseDataProvider) === FALSE)
       {
-        throw new RuntimeException('Invalid gateway "'.htmlspecialchars($o->driver).'".  Must implement IBaseGateway.');
+        throw new RuntimeException('Invalid data provider "'.htmlspecialchars($o->driver).'".  Must extend BaseDataProvider.');
       }
-      $this->dp = $this->gateway->dp; // Make dataprovider publicly accessible
+      $this->ds = $this->dp->ds; // Make datasource publicly accessible, possibly remove later
     }
 
-    public function addAssignment(Assignment $a)
+    public function __call($name, $args)
     {
-      $a->validate();
-      if ($this->nodeExists($a->module, $a->node) === FALSE)
+      if (substr($name, 0, 3) == 'add')
       {
-        throw new RuntimeException('Node id "'.htmlspecialchars($a->node).'" does not exist in module with id "'.htmlspecialchars($a->module).'".');
+        return $this->add($args[0]);
       }
-      return $this->gateway->addAssignment($a);
+      if (substr($name, 0, 6) == 'delete')
+      {
+        $class = 'MoXIM\\models\\'.substr($name, 6);
+        $n = new $class();
+        $n->id = $args[0];
+        return $this->delete($n);
+      }
+      if (substr($name, 0, 3) == 'get')
+      {
+        $class = 'MoXIM\\models\\'.substr($name, 3);
+        $n = new $class();
+        $n->id = $args[0];
+        return $this->get($n);
+      }
+      if (substr($name, 0, 6) == 'update')
+      {
+        return $this->update($args[0]);
+      }
     }
 
-    public function addModule(Module $m)
+    /* Basic methods */
+    public function add(Node $n)
     {
-      $m->validate();
-      if ($this->gateway->getModuleId($m->name) !== FALSE)
-      {
-        throw new RuntimeException('Module "'.htmlspecialchars($m->name).'" already exists.');
-      }
-      return $this->gateway->addModule($m);
+      $class = get_class($n);
+      $n->id = $class::NEW_ID;
+      return $this->save($n);
     }
 
-    public function addRelation(Relation $r)
+    public function delete(Node $n)
     {
-      $r->validate();
-      if ($this->gateway->getRelationId($r->domain, $r->name, $r->range) !== FALSE)
+      $class = get_class($n);
+      $n->id = $class::validateId($n->id);
+      if ($this->dp->delete($n) === FALSE)
       {
-        throw new RuntimeException('Relation "'.htmlspecialchars($this->gateway->getModule($r->domain)->name.' '.$r->name.' '.$this->gateway->getModule($r->range)->name).'" already exists.');
+        throw new RuntimeException(basename($class).' id "'.htmlspecialchars($n->id).'" does not exist.');
       }
-      if ($this->gateway->getModule($r->domain) === FALSE)
-      {
-        throw new RuntimeException('Domain module id "'.htmlspecialchars($r->domain).'" does not exist.');
-      }
-      if ($this->gateway->getModule($r->range) === FALSE)
-      {
-        throw new RuntimeException('Range module id "'.htmlspecialchars($r->range).'" does not exist.');
-      }
-      return $this->gateway->addRelation($r);
+      return TRUE;
     }
 
-    public function addRelationship(Relationship $r)
+    public function get(Node $n)
     {
-      $r->validate();
-      if (($relation = $this->gateway->getRelation($r->relation)) === FALSE)
+      $class = get_class($n);
+      if (isset($n->id))
       {
-        throw new RuntimeException('Relationship relation id "'.$r->relation.'" does not exist.');
+        $id = $class::validateId($n->id);
+        $n = new $class();
+        $n->id = $id;
+      } else {
+        $n->id = $class::NEW_ID;
+        $n->validate();
+        $n->id = NULL;
       }
-      if ($this->gateway->getRelationshipId($r->domain, $r->relation, $r->range) !== FALSE)
+      if (($n = $this->dp->get($n)) === FALSE)
       {
-        throw new RuntimeException('Relationship "'.htmlspecialchars($this->getModule($relation->domain)->name.'('.$r->domain.') '.$relation->name.' '.$this->gateway->getModule($relation->range)->name.'('.$r->range).')" already exists.');
+        throw new RuntimeException(basename($class).' id "'.htmlspecialchars($n->id).'" does not exist.');
       }
-      if ($this->nodeExists($relation->domain, $r->domain) === FALSE)
-      {
-        throw new RuntimeException('Relationship domain id "'.htmlspecialchars($r->domain).'" does not exist in module "'.htmlspecialchars($this->getModule($relation->domain)->name).'".');
-      }
-      if ($this->nodeExists($relation->range, $r->range) === FALSE)
-      {
-        throw new RuntimeException('Relationship range id "'.htmlspecialchars($r->range).'" does not exist in module "'.htmlspecialchars($this->getModule($relation->range)->name).'".');
-      }
-      return $this->gateway->addRelationship($r);
+      return $n;
     }
 
-    private function _checkOptions($opts)
+    public function update(Node $n)
+    {
+      $class = get_class($n);
+      $n2 = new $class();
+      $n2->id = $n->id;
+      if ($this->dp->get($n2) === FALSE)
+      {
+        throw new RuntimeException('Update failed: '.basename($class).' id "'.htmlspecialchars($n->$id).'" does not exist.');
+      }
+      return $this->save($n);
+    }
+
+    /* Helper methods */
+    protected function checkOptions($opts)
     {
       if (!is_null($opts))
       {
@@ -110,183 +131,193 @@
       return $opts;
     }
 
-    public function deleteAssignment($id)
+    protected function nodeExists($module, $node)
     {
-      $id = Assignment::validateId($id);
-      if ($this->gateway->deleteAssignment($id) === FALSE)
-      {
-        throw new RuntimeException('Assignment id "'.htmlspecialchars($id).'" does not exist.');
-      }
-      return TRUE;
+      $m = new Module();
+      $m->id = $module;
+      $module = $this->dp->get($m);
+      return $this->dp->nodeExists($module, $node);
     }
 
-    public function deleteModule($id)
+    protected function save(Node $n)
     {
-      $id = Module::validateId($id);
-      if ($this->gateway->deleteModule($id) === FALSE)
+      $n->validate();
+      $class = get_class($n);
+      $f = 'save' . basename(str_replace('\\', '/', $class));
+      $n = $this->$f($n); // Check foreign keys and uniqueness
+      if ($n->id == $class::NEW_ID)
       {
-        throw new RuntimeException('Module id "'.htmlspecialchars($id).'" does not exist.');
+        $n->id = NULL;
+        return $this->dp->add($n);
+      } else {
+        return $this->dp->update($n);
       }
-      return TRUE;
     }
 
-    public function deleteRelation($id)
+    protected function saveAssignment(Assignment $a)
     {
-      $id = Relation::validateId($id);
-      if ($this->gateway->deleteRelation($id) === FALSE)
+      // Check if node exists
+      if ($this->nodeExists($a->module, $a->node) === FALSE)
       {
-        throw new RuntimeException('Relation id "'.htmlspecialchars($id).'" does not exist.');
-      }
-      return TRUE;
-    }
-
-    public function deleteRelationship($id)
-    {
-      $id = Relationship::validateId($id);
-      if ($this->gateway->deleteRelationship($id) === FALSE)
-      {
-        throw new RuntimeException('Relationship id "'.htmlspecialchars($id).'" does not exist.');
-      }
-      return TRUE;
-    }
-
-    public function getAssignment($id)
-    {
-      $id = Assignment::validateId($id);
-      if (($a = $this->gateway->getAssignment($id)) === FALSE)
-      {
-        throw new RuntimeException('Assignment id "'.htmlspecialchars($id).'" does not exist.');
+        $m = new Module();
+        $m->id = $a->module;
+        throw new RuntimeException('Node id "'.htmlspecialchars($a->node).'" does not exist in module with id "'.htmlspecialchars($this->dp->get($m)->name).'".');
       }
       return $a;
     }
 
-    public function getAssignments($module = NULL, $node = NULL, $value = NULL, $opts = NULL)
+    protected function saveModule(Module $m)
     {
-      if (!is_null($module))
+      // Check for existence
+      if (!$this->dp->moduleExists($m->name))
       {
-        $module = Module::validateId($module);
+        throw new RuntimeException('Module "'.htmlspecialchars($m->name).'" does not exist.');
       }
-      $opts = $this->_checkOptions($opts);
-      return $this->gateway->getAssignments($module, $node, $value, $opts);
-    }
-
-    public function getModule($id)
-    {
-      $id = Module::validateId($id);
-      if (($m = $this->gateway->getModule($id)) === FALSE)
+      // Check for unique name
+      $m2 = clone $m;
+      $m2->id = NULL;
+      $id = $this->dp->get($m2)->id;
+      if (($id !== FALSE) && ($id != $m->id))
       {
-        throw new RuntimeException('Module id "'.htmlspecialchars($id).'" does not exist.');
+        throw new RuntimeException('Module "'.htmlspecialchars($m->name).'" already exists.');
       }
       return $m;
     }
 
+    protected function saveRelation(Relation $r)
+    {
+      // Check if source Module exists
+      $ms = new Module();
+      $ms->id = $r->source;
+      if (($ms = $this->dp->get($ms)) === FALSE)
+      {
+        throw new RuntimeException('Source module id "'.htmlspecialchars($r->source).'" does not exist.');
+      }
+      // Check if target Module exists
+      $mt = new Module();
+      $mt->id = $r->target;
+      if (($mt = $this->dp->get($mt)) === FALSE)
+      {
+        throw new RuntimeException('Target module id "'.htmlspecialchars($r->target).'" does not exist.');
+      }
+      // Check uniqueness
+      $r2 = clone $r;
+      $r2->id = NULL;
+      $id = $this->dp->get($r2)->id;
+      if (($id !== FALSE) && ($id != $r->id))
+      {
+        throw new RuntimeException('Relation "'.htmlspecialchars($ms->name.' '.$r->name.' '.$mt->name).'" already exists.');
+      }
+      return $r;
+    }
+
+    protected function saveRelationship(Relationship $r)
+    {
+      // Check if Relation exists
+      $relation = new Relation();
+      $relation->id = $r->relation;
+      if (($relation = $this->dp->get($relation)) === FALSE)
+      {
+        throw new RuntimeException('Relationship relation id "'.$r->relation.'" does not exist.');
+      }
+      // Check if source Node exists
+      if ($this->nodeExists($relation->source, $r->source) === FALSE)
+      {
+        $m = new Module();
+        $m->id = $relation->source;
+        throw new RuntimeException('Relationship source id "'.htmlspecialchars($r->source).'" does not exist in module "'.htmlspecialchars($this->dp->get($m)->name).'".');
+      }
+      // Check if target Node exists
+      if ($this->nodeExists($relation->target, $r->target) === FALSE)
+      {
+        $m = new Module();
+        $m->id = $relation->target;
+        throw new RuntimeException('Relationship target id "'.htmlspecialchars($r->target).'" does not exist in module "'.htmlspecialchars($this->dp->get($m)->name).'".');
+      }
+      // Check uniqueness
+      $r2 = clone $r;
+      $r2->id = NULL;
+      $id = $this->dp->get($r2)->id;
+      if (($id !== FALSE) && ($id != $r->id))
+      {
+        $ms = new Module();
+        $ms->id = $relation->source;
+        $mt = new Module();
+        $mt->id = $relation->target;
+        throw new RuntimeException('Relationship "'.htmlspecialchars($this->dp->get($ms)->name.'('.$r->source.') '.$relation->name.' '.$this->dp->get($mt)->name.'('.$r->target).')" already exists.');
+      }
+      return $r;
+    }
+
+    /* Complex methods */
+    public function getAssignments($module = NULL, $node = NULL, $value = NULL, $opts = NULL)
+    {
+      if (!is_null($module))
+      {
+        $m = new Module();
+        $m->id = $module;
+        $module = $this->get($m)->id;
+      }
+      if (!is_null($node))
+      {
+        $node = Node::validateId($node);
+      }
+      $opts = $this->checkOptions($opts);
+      return $this->dp->getAssignments($module, $node, $value, $opts);
+    }
+
     public function getModules($opts = NULL)
     {
-      $opts = $this->_checkOptions($opts);
-      return $this->gateway->getModules($opts);
+      $opts = $this->checkOptions($opts);
+      return $this->dp->getModules($opts);
     }
 
     public function getNodes($module, $opts = NULL)
     {
-      $opts = $this->_checkOptions($opts);
-      return $this->gateway->getNodes($this->getModule($module)->id, $opts);
+      $m = new Module();
+      $m->id = $module;
+      $module = $this->get($m)->id;
+      $opts = $this->checkOptions($opts);
+      return $this->dp->getNodes($module, $opts);
     }
 
-    public function getRelation($id)
+    public function getRelations($source = NULL, $name = NULL, $target = NULL, $opts = NULL)
     {
-      $id = Relation::validateId($id);
-      if (($r = $this->gateway->getRelation($id)) === FALSE)
+      if (!is_null($source))
       {
-        throw new RuntimeException('Relation id "'.htmlspecialchars($id).'" does not exist.');
+        $m = new Module();
+        $m->id = $source;
+        $source = $this->get($m)->id;
       }
-      return $r;
+      if (!is_null($target))
+      {
+        $m = new Module();
+        $m->id = $target;
+        $target = $this->get($m)->id;
+      }
+      $opts = $this->checkOptions($opts);
+      return $this->dp->getRelations($source, $name, $target, $opts);
     }
 
-    public function getRelations($domain = NULL, $name = NULL, $range = NULL, $opts = NULL)
+    public function getRelationships($source = NULL, $relation = NULL, $target = NULL, $opts = NULL)
     {
-      if (!is_null($domain))
+      if (!is_null($source))
       {
-        $domain = Module::validateId($domain);
-      }
-      if (!is_null($range))
-      {
-        $range = Module::validateId($range);
-      }
-      $opts = $this->_checkOptions($opts);
-      return $this->gateway->getRelations($domain, $name, $range, $opts);
-    }
-
-    public function getRelationship($id)
-    {
-      $id = Relationship::validateId($id);
-      if (($r = $this->gateway->getRelationship($id)) === FALSE)
-      {
-        throw new RuntimeException('Relationship id "'.htmlspecialchars($id).'" does not exist.');
-      }
-      return $r;
-    }
-
-    public function getRelationships($domain = NULL, $relation = NULL, $range = NULL, $opts = NULL)
-    {
-      if (!is_null($domain))
-      {
-        $domain = Module::validateId($domain);
+        $source = Node::validateId($source);
       }
       if (!is_null($relation))
       {
-        $domain = Relation::validateId($domain);
+        $r = new Relation();
+        $r->id = $relation;
+        $relation = $this->get($r)->id;
       }
-      if (!is_null($domain))
+      if (!is_null($target))
       {
-        $domain = Module::validateId($domain);
+        $target = Node::validateId($target);
       }
-      $opts = $this->_checkOptions($opts);
-      return $this->gateway->getRelationships($domain, $relation, $range, $opts);
-    }
-
-    private function nodeExists($module, $node)
-    {
-      return $this->gateway->nodeExists($this->getModule($module)->id, $node);
-    }
-
-    public function updateAssignment(Assignment $a)
-    {
-      $a->validate(Assignment::UPDATE);
-      if ($this->gateway->updateAssignment($a) === FALSE)
-      {
-        throw new RuntimeException('Assignment id "'.htmlspecialchars($a->id).'" does not exist.');
-      }
-      return TRUE;
-    }
-
-    public function updateModule(Module $m)
-    {
-      $a->validate(Module::UPDATE);
-      if ($this->gateway->updateModule($m) === FALSE)
-      {
-        throw new RuntimeException('Module id "'.htmlspecialchars($m->id).'" does not exist.');
-      }
-      return TRUE;
-    }
-
-    public function updateRelation(Relation $a)
-    {
-      $a->validate(Relation::UPDATE);
-      if ($this->gateway->updateRelation($r) === FALSE)
-      {
-        throw new RuntimeException('Relation id "'.htmlspecialchars($r->id).'" does not exist.');
-      }
-      return TRUE;
-    }
-
-    public function updateRelationship(Relationship $a)
-    {
-      $a->validate(Relationship::UPDATE);
-      if ($this->gateway->updateRelationship($r) === FALSE)
-      {
-        throw new RuntimeException('Relationship id "'.htmlspecialchars($r->id).'" does not exist.');
-      }
-      return TRUE;
+      $opts = $this->checkOptions($opts);
+      return $this->dp->getRelationships($source, $relation, $target, $opts);
     }
   }
+
 ?>

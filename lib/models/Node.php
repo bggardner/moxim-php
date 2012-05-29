@@ -4,16 +4,19 @@
 
   abstract class Node
   {
-    const UPDATE = 1;
+    const NEW_ID = 0;
+    const MAX_ID = PHP_INT_MAX;
+    const MIN_ID = 1;
   
     public $id;
   
-    protected function validate($flags = 0)
+    protected function validate()
     {
-      if ($flags & self::UPDATE)
+      if ($this->id != self::NEW_ID)
       {
         $this->id = self::validateId($this->id);
       }
+      return $this;
     }
   
     static public function validateId($id)
@@ -22,7 +25,7 @@
       {
         throw new RuntimeException(get_called_class().' id is required.');
       }
-      if (($id = filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)))) === FALSE)
+      if (($id = filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => self::MIN_ID, 'max_range' => self::MAX_ID)))) === FALSE)
       {
         throw new RuntimeException(get_called_class().' id must be a positive integer, '.gettype($id).'('.htmlspecialchars($id).') given.');
       }
