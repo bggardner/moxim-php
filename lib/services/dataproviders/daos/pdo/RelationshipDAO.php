@@ -6,8 +6,6 @@
 
   class RelationshipDAO extends NodeDAO
   {
-    const TABLE_NAME = 'moxim_relationships';
-
     public function __construct($ds)
     {
       $this->columns["source"] = PDO::PARAM_INT;

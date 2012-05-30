@@ -3,6 +3,8 @@
 
   class Assignment extends Node
   {
+    const MODULE_NAME = 'moxim_assignments';
+
     public $module;
     public $node;
     public $value;

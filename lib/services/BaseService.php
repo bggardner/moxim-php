@@ -8,36 +8,33 @@
   use MoXIM\models\Relation;
   use MoXIM\models\Relationship;
 
-  use \RuntimeException;
+  use MoXIM\utils\Exception;
 
-  /* This class provides error checking to the dp/dataprovider. */
+  /* This class provides error checking to the data provider. */
 
   class BaseService
   {
-    // Table ids
-    const ASSIGNMENTS = 4;
-    const MODULES = 1;
-    const RELATIONS = 2;
-    const RELATIONSHIPS = 3;
-
     public $default_options = array('sort' => array('id' => 'ASC'));
+
     private $dp;
-    public  $ds;
+    public  $ds; // Possibly delete later
 
     public function __construct($o)
     {
       if ((include_once 'dataproviders/' . $o->driver . '/BaseDataProvider.php') === FALSE)
       {
-        throw new RuntimeException('Driver "'.htmlspecialchars($o->driver).'" does not exist.');
+        throw new Exception('Driver "'.htmlspecialchars($o->driver).'" does not exist.');
       }
       $driverClass = __NAMESPACE__ . '\\dataproviders\\' . str_replace('/', '\\', $o->driver) . '\\BaseDataProvider';
       $this->dp = new $driverClass($o);
       if (($this->dp instanceof dataproviders\BaseDataProvider) === FALSE)
       {
-        throw new RuntimeException('Invalid data provider "'.htmlspecialchars($o->driver).'".  Must extend BaseDataProvider.');
+        throw new Exception('Invalid data provider "'.htmlspecialchars($o->driver).'".  Must extend BaseDataProvider.');
       }
       $this->ds = $this->dp->ds; // Make datasource publicly accessible, possibly remove later
     }
+
+    /* Map [command][model]() to [command]() */
 
     public function __call($name, $args)
     {
@@ -79,7 +76,7 @@
       $n->id = $class::validateId($n->id);
       if ($this->dp->delete($n) === FALSE)
       {
-        throw new RuntimeException(basename($class).' id "'.htmlspecialchars($n->id).'" does not exist.');
+        throw new Exception(basename($class).' id "'.htmlspecialchars($n->id).'" does not exist.');
       }
       return TRUE;
     }
@@ -99,7 +96,7 @@
       }
       if (($n = $this->dp->get($n)) === FALSE)
       {
-        throw new RuntimeException(basename($class).' id "'.htmlspecialchars($n->id).'" does not exist.');
+        throw new Exception(basename($class).' id "'.htmlspecialchars($n->id).'" does not exist.');
       }
       return $n;
     }
@@ -111,7 +108,7 @@
       $n2->id = $n->id;
       if ($this->dp->get($n2) === FALSE)
       {
-        throw new RuntimeException('Update failed: '.basename($class).' id "'.htmlspecialchars($n->$id).'" does not exist.');
+        throw new Exception('Update failed: '.basename($class).' id "'.htmlspecialchars($n->$id).'" does not exist.');
       }
       return $this->save($n);
     }
@@ -123,7 +120,7 @@
       {
         if (!is_array($opts))
         {
-          throw new RuntimeException('Options must be an associative array.');
+          throw new Exception('Options must be an associative array.');
         }
       } else {
         $opts = $this->default_options;
@@ -161,7 +158,7 @@
       {
         $m = new Module();
         $m->id = $a->module;
-        throw new RuntimeException('Node id "'.htmlspecialchars($a->node).'" does not exist in module with id "'.htmlspecialchars($this->dp->get($m)->name).'".');
+        throw new Exception('Node id "'.htmlspecialchars($a->node).'" does not exist in module with id "'.htmlspecialchars($this->dp->get($m)->name).'".');
       }
       return $a;
     }
@@ -171,7 +168,7 @@
       // Check for existence
       if (!$this->dp->moduleExists($m->name))
       {
-        throw new RuntimeException('Module "'.htmlspecialchars($m->name).'" does not exist.');
+        throw new Exception('Module "'.htmlspecialchars($m->name).'" does not exist.');
       }
       // Check for unique name
       $m2 = clone $m;
@@ -179,7 +176,7 @@
       $id = $this->dp->get($m2)->id;
       if (($id !== FALSE) && ($id != $m->id))
       {
-        throw new RuntimeException('Module "'.htmlspecialchars($m->name).'" already exists.');
+        throw new Exception('Module "'.htmlspecialchars($m->name).'" already exists.');
       }
       return $m;
     }
@@ -191,14 +188,15 @@
       $ms->id = $r->source;
       if (($ms = $this->dp->get($ms)) === FALSE)
       {
-        throw new RuntimeException('Source module id "'.htmlspecialchars($r->source).'" does not exist.');
+        throw new Exception('Source module id "'.htmlspecialchars($r->source).'" does not exist.');
       }
+      var_dump($ms);
       // Check if target Module exists
       $mt = new Module();
       $mt->id = $r->target;
       if (($mt = $this->dp->get($mt)) === FALSE)
       {
-        throw new RuntimeException('Target module id "'.htmlspecialchars($r->target).'" does not exist.');
+        throw new Exception('Target module id "'.htmlspecialchars($r->target).'" does not exist.');
       }
       // Check uniqueness
       $r2 = clone $r;
@@ -206,7 +204,7 @@
       $id = $this->dp->get($r2)->id;
       if (($id !== FALSE) && ($id != $r->id))
       {
-        throw new RuntimeException('Relation "'.htmlspecialchars($ms->name.' '.$r->name.' '.$mt->name).'" already exists.');
+        throw new Exception('Relation "'.htmlspecialchars($ms->name.' '.$r->name.' '.$mt->name).'" already exists.');
       }
       return $r;
     }
@@ -218,21 +216,21 @@
       $relation->id = $r->relation;
       if (($relation = $this->dp->get($relation)) === FALSE)
       {
-        throw new RuntimeException('Relationship relation id "'.$r->relation.'" does not exist.');
+        throw new Exception('Relationship relation id "'.$r->relation.'" does not exist.');
       }
       // Check if source Node exists
       if ($this->nodeExists($relation->source, $r->source) === FALSE)
       {
         $m = new Module();
         $m->id = $relation->source;
-        throw new RuntimeException('Relationship source id "'.htmlspecialchars($r->source).'" does not exist in module "'.htmlspecialchars($this->dp->get($m)->name).'".');
+        throw new Exception('Relationship source id "'.htmlspecialchars($r->source).'" does not exist in module "'.htmlspecialchars($this->dp->get($m)->name).'".');
       }
       // Check if target Node exists
       if ($this->nodeExists($relation->target, $r->target) === FALSE)
       {
         $m = new Module();
         $m->id = $relation->target;
-        throw new RuntimeException('Relationship target id "'.htmlspecialchars($r->target).'" does not exist in module "'.htmlspecialchars($this->dp->get($m)->name).'".');
+        throw new Exception('Relationship target id "'.htmlspecialchars($r->target).'" does not exist in module "'.htmlspecialchars($this->dp->get($m)->name).'".');
       }
       // Check uniqueness
       $r2 = clone $r;
@@ -244,7 +242,7 @@
         $ms->id = $relation->source;
         $mt = new Module();
         $mt->id = $relation->target;
-        throw new RuntimeException('Relationship "'.htmlspecialchars($this->dp->get($ms)->name.'('.$r->source.') '.$relation->name.' '.$this->dp->get($mt)->name.'('.$r->target).')" already exists.');
+        throw new Exception('Relationship "'.htmlspecialchars($this->dp->get($ms)->name.'('.$r->source.') '.$relation->name.' '.$this->dp->get($mt)->name.'('.$r->target).')" already exists.');
       }
       return $r;
     }
@@ -276,7 +274,7 @@
     {
       $m = new Module();
       $m->id = $module;
-      $module = $this->get($m)->id;
+      $module = $this->get($m);
       $opts = $this->checkOptions($opts);
       return $this->dp->getNodes($module, $opts);
     }

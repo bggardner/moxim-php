@@ -9,11 +9,9 @@
 
   class BaseGateway extends \MoXIM\services\dataproviders\gateways\pdo\BaseGateway
   {
-//    static private $_module; // Used for nodeExists
-
     static public function _getAssignments($module, $node, $value, $opts)
     {
-      $sql = 'SELECT * FROM `'.self::ASSIGNMENTS.'` WHERE 1';
+      $sql = 'SELECT * FROM `'.Assignment::MODULE_NAME.'` WHERE 1';
       if (!is_null($module))
       {
         $sql .= ' AND `module` = '.$module;
@@ -29,29 +27,19 @@
       return $sql.self::_options($opts);
     }
 
-    static public function _getModuleId($name)
-    {
-      return 'SELECT `id` FROM `'.self::MODULES.'` WHERE `name` = '.$name;
-    }
-
     static public function _getModules($opts)
     {
-      return 'SELECT * FROM `'.self::MODULES.'`'.self::_options($opts);
+      return 'SELECT * FROM `'.Module::MODULE_NAME.'`'.self::_options($opts);
     }
 
-    static public function _getNodes($module, $opts)
+    static public function _getNodes(Module $module, $opts)
     {
-      return 'SELECT * FROM `'.$module.'`'.self::_options($opts);
-    }
-
-    static public function _getRelationId($source, $name, $target)
-    {
-      return 'SELECT `id` FROM `'.self::RELATIONS.'` WHERE `source` = '.$source.' AND `name` = '.$name.' AND `target` = '.$target;
+      return 'SELECT * FROM `'.$module->name.'`'.self::_options($opts);
     }
 
     static public function _getRelations($source, $name, $target, $opts)
     {
-      $sql = 'SELECT * FROM `'.self::RELATIONS.'` WHERE 1';
+      $sql = 'SELECT * FROM `'.Relation::MODULE_NAME.'` WHERE 1';
       if (!is_null($source))
       {
         $sql .= ' AND `source` = '.$source;
@@ -67,14 +55,9 @@
       return $sql.self::_options($opts);
     }
 
-    static public function _getRelationshipId($source, $relation, $target)
-    {
-      return 'SELECT `id` FROM `'.self::RELATIONSHIPS.'` WHERE `source` = '.$source.' AND `relation` = '.$relation.' AND `target` = '.$target;
-    }
-
     static public function _getRelationships($source, $relation, $target, $opts)
     {
-      $sql = 'SELECT * FROM `'.self::RELATIONSHIPS.'` WHERE 1';
+      $sql = 'SELECT * FROM `'.Relationship::MODULE_NAME.'` WHERE 1';
       if (!is_null($source))
       {
         $sql .= ' AND `source` = '.$source;
@@ -90,7 +73,7 @@
       return $sql.self::_options($opts);
     }
 
-    public function _moduleExists($name)
+    static public function _moduleExists($name)
     {
       return 'SHOW TABLES LIKE '.$name;
     }

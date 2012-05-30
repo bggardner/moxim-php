@@ -4,7 +4,6 @@
 
   class AssignmentDAO extends \MoXIM\services\dataproviders\daos\pdo\AssignmentDAO
   {
-    const TABLE_NAME = 'moxim_assignments';
   }
 
 ?>

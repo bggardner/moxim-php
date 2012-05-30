@@ -3,6 +3,7 @@
   
   class Relation extends Node
   {
+    const MODULE_NAME = 'moxim_relations';
     const NAME_LENGTH = 32;
     
     public $source;

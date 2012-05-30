@@ -6,8 +6,6 @@
 
   abstract class AssignmentDAO extends NodeDAO
   {
-    const TABLE_NAME = 'moxim_assignments';
-
     public function __construct($ds)
     {
       $this->columns["module"] = PDO::PARAM_INT;

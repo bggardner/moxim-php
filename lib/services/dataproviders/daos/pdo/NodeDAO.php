@@ -21,14 +21,41 @@
 
     public function add(Node $n)
     {
-      $class = get_class($n);
-      $driver = $this->driver;
-      $stmt = $this->ds->prepare($driver::add(static::TABLE_NAME, $n));
+      $sql = call_user_func($this->driver.'::add', $n);
+      $stmt = $this->ds->prepare($sql);
       $this->bindValues($stmt, $n);
       $stmt->execute();
       $n->id = (int) $this->ds->lastInsertId('id');
       return $n;
     }
+
+    public function delete(Node $n)
+    {
+      $sql = call_user_func($this->driver.'::delete', $n);
+      $stmt = $this->ds->prepare($sql);
+      $this->bindValues($stmt, $n);
+      return $stmt->execute();
+    }
+
+    public function get(Node $n)
+    {
+      $sql = call_user_func($this->driver.'::get', $n);
+      $stmt = $this->ds->prepare($sql);
+      $this->bindValues($stmt, $n);
+      $stmt->execute();
+      $this->bindColumns($stmt, $n);
+      return $stmt->fetch(PDO::FETCH_BOUND) ? $n : FALSE;
+    }
+
+    public function update(Node $n)
+    {
+      $sql = call_user_func($this->driver.'::update', $n);
+      $stmt = $this->ds->prepare($sql);
+      $this->bindValues($stmt, $n);
+      return $stmt->execute();
+    }
+
+    /* Helper methods */
 
     protected function bindColumns(PDOStatement &$stmt, Node &$n)
     {
@@ -52,34 +79,6 @@
       }
     }
 
-    public function delete(Node $n)
-    {
-      $class = get_class($n);
-      $driver = $this->driver;
-      $stmt = $this->ds->prepare($driver::delete(self::TABLE_NAME, $n));
-      $this->bindValues($stmt, $n);
-      return (bool) $stmt->execute();
-    }
-
-    public function get(Node $n)
-    {
-      $class = get_class($n);
-      $driver = $this->driver;
-      $stmt = $this->ds->prepare($driver::get(static::TABLE_NAME, $n));
-      $this->bindValues($stmt, $n);
-      $stmt->execute();
-      $this->bindColumns($stmt, $n);
-      $stmt->fetch(PDO::FETCH_BOUND);
-      return $n;
-    }
-
-    public function update(Node $n)
-    {
-      $class = get_class($n);
-      $driver = $this->driver;
-      $stmt = $this->ds->prepare($driver::update(static::TABLE_NAME, $n));
-      $this->bindValues($stmt, $n);
-      return $stmt->execute();
-    }
   }
+
 ?>

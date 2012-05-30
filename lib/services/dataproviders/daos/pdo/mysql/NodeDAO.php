@@ -4,28 +4,34 @@
 
   use MoXIM\models\Node;
 
-  class NodeDAO
+  class NodeDAO implements \MoXIM\services\dataproviders\daos\pdo\INodeDAO
   {
-    static public function add($table, Node $n)
+    static public function add(Node $n)
     {
+      $class = get_class($n);
       $props = self::props($n);
-      return 'INSERT INTO `'.$table.'` (`'.implode('`,`', $props).'`) VALUES (:'.implode(',:', $props).')';
+      return 'INSERT INTO `'.$class::MODULE_NAME.'` (`'.implode('`,`', $props).'`) VALUES (:'.implode(',:', $props).')';
     }
 
-    static public function delete($table, Node $n)
+    static public function delete(Node $n)
     {
-      return 'DELETE FROM `'.$table.'` WHERE '.self::filter($n);
+      $class = get_class($n);
+      return 'DELETE FROM `'.$class::MODULE_NAME.'` WHERE '.self::filter($n).' LIMIT 1';
     }
 
-    static public function get($table, Node $n)
+    static public function get(Node $n)
     {
-      return 'SELECT * FROM `'.$table.'` WHERE '.self::filter($n);
+      $class = get_class($n);
+      return 'SELECT * FROM `'.$class::MODULE_NAME.'` WHERE '.self::filter($n);
     }
 
-    static public function update($table, Node $n)
+    static public function update(Node $n)
     {
-      return 'UPDATE `'.$table.'` SET '.implode(',', self::buildProps($n)).' WHERE `id` = :id';
+      $class = get_class($n);
+      return 'UPDATE `'.$class::MODULE_NAME.'` SET '.implode(',', self::buildProps($n)).' WHERE `id` = :id';
     }
+
+    /* Helper methods*/
 
     static private function buildProps($n)
     {

@@ -13,12 +13,6 @@
 
   abstract class BaseGateway implements \MoXIM\services\dataproviders\gateways\IBaseGateway
   {
-    // Table names
-    const ASSIGNMENTS = 'moxim_assignments';
-    const MODULES = 'moxim_modules';
-    const RELATIONS = 'moxim_relations';
-    const RELATIONSHIPS = 'moxim_relationships';
-
     protected $ds;
 
     public function __construct($ds)
@@ -44,28 +38,16 @@
       return $stmt->fetchAll(PDO::FETCH_CLASS, 'MoXIM\models\Assignment');
     }
 
-    public function getModuleId($name)
-    {
-      $stmt = $this->ds->query(static::_getModuleId($this->ds->quote($name)));
-      return $stmt->fetchColumn();
-    }
-
     public function getModules($opts)
     {
       $stmt = $this->ds->query(static::_getModules($opts));
       return $stmt->fetchAll(PDO::FETCH_CLASS, 'MoXIM\models\Module');
     }
 
-    public function getNodes($module, $opts)
+    public function getNodes(Module $module, $opts)
     {
       $stmt = $this->ds->query(static::_getNodes($module, $opts));
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getRelationId($source, $name, $target)
-    {
-      $stmt = $this->ds->query(static::_getRelationId($this->ds->quote($source, PDO::PARAM_INT), $this->ds->quote($name), $this->ds->quote($target, PDO::PARAM_INT)));
-      return $stmt->fetchColumn();
     }
 
     public function getRelations($source, $name, $target, $opts)
@@ -84,12 +66,6 @@
       }
       $stmt = $this->ds->query(static::_getRelations($source, $name, $target, $opts));
       return $stmt->fetchAll(PDO::FETCH_CLASS, 'MoXIM\models\Relation');
-    }
-
-    public function getRelationshipId($source, $relation, $target)
-    {
-      $stmt = $this->ds->query(static::_getRelationshipId($this->ds->quote($source, PDO::PARAM_INT), $this->ds->quote($relation, PDO::PARAM_INT), $this->ds->quote($target, PDO::PARAM_INT)));
-      return $stmt->fetchColumn();
     }
 
     public function getRelationships($source, $relation, $target, $opts)

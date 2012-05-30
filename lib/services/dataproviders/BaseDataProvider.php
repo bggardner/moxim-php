@@ -6,8 +6,8 @@
   use MoXIM\models\Module;
   use MoXIM\models\Relation;
   use MoXIM\models\Relationship;
+  use MoXIM\utils\Exception;
 
-  use RuntimeException;
 
   abstract class BaseDataProvider
   {
@@ -19,9 +19,10 @@
     public function __construct($ds, $driver)
     {
       $this->ds = $ds; // Possibly remove later
+
       if ((include_once __DIR__ . '/gateways/' . $driver . '/BaseGateway.php') === FALSE)
       {
-        throw new RuntimeException('Gateway for driver "'.htmlspecialchars($driver).'" does not exist.');
+        throw new Exception('Gateway for driver "'.htmlspecialchars($driver).'" does not exist.');
       }
       $gatewayClass = __NAMESPACE__ . '\\gateways\\' . str_replace('/', '\\', $driver) . '\\BaseGateway';
       $this->gateway = new $gatewayClass($ds);
@@ -31,7 +32,7 @@
       {
         if ((include_once __DIR__ . '/daos/' . $driver . '/' . $dao . 'DAO.php') === FALSE)
         {
-          throw new RuntimeException($dao . ' DAO for driver "'.htmlspecialchars($driver).'" does not exist.');
+          throw new Exception($dao . ' DAO for driver "'.htmlspecialchars($driver).'" does not exist.');
         }
         $daoClass = __NAMESPACE__ . '\\daos\\' . str_replace('/', '\\', $driver) . '\\' . $dao . 'DAO';
         $this->daos[$dao] = new $daoClass($ds);
@@ -45,52 +46,90 @@
       $class = basename(str_replace('\\', '/', get_class($args[0])));
       if (in_array($class, array_keys($this->daos)) === FALSE)
       {
-        throw new RuntimeException('DAO for class "'.htmlspecialchars($class).'" not supported.');
+        throw new Exception('DAO for class "'.$class.'" not supported.');
       }
       if (!method_exists($this->daos[$class], $name))
       {
-        throw new RuntimeException($class.'DAO method "'.htmlspecialchars($name).'" not supported.');
+        throw new Exception($class.'DAO method "'.$name.'" not supported.');
       }
-      return $this->daos[$class]->$name($args[0]);
+      try {
+        return $this->daos[$class]->$name($args[0]);
+      } catch (\Exception $e)
+      {
+        throw new Exception('DAO method "'.$name.'('.$class.')" failed with message "'.$e->getMessage(), Exception::DP, $e);
+      }
     }
 
     /* Gateway functions */
 
     public function getAssignments($module, $node, $value, $opts)
     {
-      return $this->gateway->getAssignments($module, $node, $value, $opts);
+      try {
+        return $this->gateway->getAssignments($module, $node, $value, $opts);
+      } catch (\Exception $e)
+        $this->gatewayException(__FUNCTION__, $e);
+      }
     }
 
     public function getModules($opts)
     {
-      return $this->gateway->getModules($opts);
+      try {
+        return $this->gateway->getModules($opts);
+      } catch (\Exception $e)
+        $this->gatewayException(__FUNCTION__, $e);
+      }
     }
 
-    public function getNodes($module, $opts)
+    public function getNodes(Module $module, $opts)
     {
-      $m = new Module();
-      $m->id = $module;
-      return $this->gateway->getNodes($this->get($m)->name, $opts);
+      try {
+        return $this->gateway->getNodes($module, $opts);
+      } catch (\Exception $e)
+        $this->gatewayException(__FUNCTION__, $e);
+      }
     }
 
     public function getRelations($source, $name, $target, $opts)
     {
-      return $this->gateway->getRelations($source, $name, $target, $opts);
+      try {
+        return $this->gateway->getRelations($source, $name, $target, $opts);
+      } catch (\Exception $e)
+        $this->gatewayException(__FUNCTION__, $e);
+      }
     }
 
     public function getRelationships($source, $relation, $target, $opts)
     {
-      return $this->gateway->getRelationships($range, $relation, $target, $opts);
+      try {
+        return $this->gateway->getRelationships($range, $relation, $target, $opts);
+      } catch (\Exception $e)
+        $this->gatewayException(__FUNCTION__, $e);
+      }
     }
 
     public function moduleExists($name)
     {
-      return $this->gateway->moduleExists($name);
+      try {
+        return $this->gateway->moduleExists($name);
+      } catch (\Exception $e)
+        $this->gatewayException(__FUNCTION__, $e);
+      }
     }
 
     public function nodeExists(Module $module, $node)
     {
-      return $this->gateway->nodeExists($module, $node);
+      try {
+        return $this->gateway->nodeExists($module, $node);
+      } catch (\Exception $e)
+        $this->gatewayException(__FUNCTION__, $e);
+      }
+    }
+
+    /* Helper methods */
+
+    private function gatewayException($f, $e)
+    {
+      throw new Exception('Gateway method "'.$f.'" failed with message "'.$e->getMessage().'", Exception::DP, $e);
     }
   }
 ?>

@@ -8,15 +8,6 @@
   $o->dbname = 'moxim';
   $svc = new Service($o);
 
-  $a = new MoXIM\models\Assignment();
-  $m = new MoXIM\models\Module();
-  $m->name = 'moxim_relationships';
-  $a->id = 2;
-  $a->module = $svc->get($m)->id;
-  $a->node = 1;
-  $a->value = 'hello';
-  $svc->update($a);
-
   if ($_GET["add"])
   {
     if ($_POST)
@@ -37,6 +28,9 @@
         $inputs[] = array('id' => 'name', 'name' => 'name', 'type' => 'string');
         break;
       case 'Relation':
+        $inputs[] = array('id' => 'source', 'name' => 'source', 'type' => 'Module');
+        $inputs[] = array('id' => 'relation', 'name' => 'name', 'type' => 'string');
+        $inputs[] = array('id' => 'target', 'name' => 'target', 'type' => 'Module');
         break;
       case 'Relationship':
         $inputs[] = array('id' => 'source', 'name' => 'source', 'type' => 'string');
@@ -49,7 +43,7 @@
         $inputs[] = array('id' => 'value', 'name' => 'value', 'type' => 'string');
         break;
       default:
-        throw new RuntimeException(htmlspecialchars($_GET["add"]).' not supported.');
+        throw new MoXIM\utils\Exception(htmlspecialchars($_GET["add"]).' not supported.');
     }
     echo '
 <form action="" method="post">
@@ -245,66 +239,4 @@
   </tr>
 </table>';
 
-  // List modules to demonstrate some functionality
-/*
-  foreach ($svc->getModules() as $x)
-  {
-    echo $x->name . '<br />';
-    switch ($x->id)
-    {
-      case Service::ASSIGNMENTS:
-        array_walk(
-          $svc->getAssignments(),
-          function ($o, $i, $svc)
-          {
-            echo ' - ('.$o->id.'): ';
-            echo $svc->getModule($o->module)->name;
-            echo '('.$o->node.') = '.htmlspecialchars($o->value);
-            echo '<br />';
-          },
-          $svc
-        );
-        break;
-      case Service::MODULES:
-        array_walk(
-          $svc->getModules(),
-          function($o)
-          {
-            echo ' - ('.$o->id.'): ';
-            echo $o->name.'<br />';
-          }
-        );
-        break;
-      case Service::RELATIONS:
-        array_walk(
-          $svc->getRelations(),
-          function($o, $i, $svc)
-          {
-            echo ' - ('.$o->id.'): ';
-            echo $svc->getModule($o->source)->name;
-            echo ' '.$o->name.' ';
-            echo $svc->getModule($o->target)->name;
-            echo '<br />';
-          },
-          $svc
-        );
-        break;
-      case Service::RELATIONSHIPS:
-        array_walk(
-          $svc->getRelationships(),
-          function($o, $i, $svc)
-          {
-            $r = $svc->getRelation($o->relation);
-            echo ' - ('.$o->id.'): ';
-            echo $svc->getModule($r->source)->name.'('.$o->source.')';
-            echo ' '.$svc->getRelation($o->relation)->name.' ';
-            echo $svc->getModule($r->target)->name.'('.$o->target.')';
-            echo '<br />';
-          },
-          $svc
-        );
-        break;
-    }
-  }
-*/
 ?>

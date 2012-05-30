@@ -3,6 +3,7 @@
   
   class Module extends Node
   {
+    const MODULE_NAME = 'moxim_modules';
     const NAME_LENGTH = 32;
     
     public $name;
